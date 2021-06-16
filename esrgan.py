@@ -140,8 +140,8 @@ for epoch in range(opt.epoch, opt.n_epochs):
         imgs_hr = Variable(imgs["hr"].type(Tensor))
 
         # Adversarial ground truths
-        valid = Variable(Tensor(np.ones((imgs_lr.size(0), *discriminator.output_shape))), requires_grad=False)
-        fake = Variable(Tensor(np.zeros((imgs_lr.size(0), *discriminator.output_shape))), requires_grad=False)
+        valid = Variable(Tensor(np.ones((imgs_lr.size(0), *discriminator.module.output_shape))), requires_grad=False)
+        fake = Variable(Tensor(np.zeros((imgs_lr.size(0), *discriminator.module.output_shape))), requires_grad=False)
 
         # ------------------
         #  Train Generators
