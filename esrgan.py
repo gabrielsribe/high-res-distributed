@@ -1,4 +1,5 @@
 """
+Font: https://github.com/eriklindernoren/PyTorch-GAN/blob/master/implementations/esrgan/esrgan.py
 Super-resolution of CelebA using Generative Adversarial Networks.
 The dataset can be downloaded from: https://www.dropbox.com/sh/8oqt9vytwxb3s4r/AADIKlz8PR9zr6Y20qbkunrba/Img/img_align_celeba.zip?dl=0
 (if not available there see if options are listed at http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)
@@ -19,6 +20,8 @@ import torchvision.transforms as transforms
 from torchvision.utils import save_image, make_grid
 
 from torch.utils.data import DataLoader
+import torch.distributed as dist
+from torch.utils.data.distributed import DistributedSampler
 from torch.autograd import Variable
 
 from models import *
@@ -50,13 +53,31 @@ parser.add_argument("--residual_blocks", type=int, default=23, help="number of r
 parser.add_argument("--warmup_batches", type=int, default=500, help="number of batches with pixel-wise loss only")
 parser.add_argument("--lambda_adv", type=float, default=5e-3, help="adversarial loss weight")
 parser.add_argument("--lambda_pixel", type=float, default=1e-2, help="pixel-wise loss weight")
+parser.add_argument("--local_rank", type=int, help="Local rank. Necessary for using the \
+                        torch.distributed.launch utility.")
+parser.add_argument('--cuda', action='store_true', help='enables cuda')
 opt = parser.parse_args()
 print(opt)
 
-device = torch.device("cpu")
-
+#device = torch.device("cpu")
 #TODO make work with this configuration
 #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+if torch.cuda.is_available():
+    device = torch.device('cuda')
+    device_ids = list(range(torch.cuda.device_count()))
+    gpus = len(device_ids)
+    print('GPU detected')
+else:
+    device = torch.device("cpu")
+    print('No GPU. switching to CPU')
+
+#Initialize distributed backend
+dist.init_process_group(backend="gloo")
+rank = torch.distributed.get_rank()
+world_size = torch.distributed.get_world_size()
+print(f"Rank: {rank}. World Size: {world_size}")
+
 
 hr_shape = (opt.hr_height, opt.hr_width)
 
@@ -64,6 +85,12 @@ hr_shape = (opt.hr_height, opt.hr_width)
 generator = GeneratorRRDB(opt.channels, filters=64, num_res_blocks=opt.residual_blocks).to(device)
 discriminator = Discriminator(input_shape=(opt.channels, *hr_shape)).to(device)
 feature_extractor = FeatureExtractor().to(device)
+
+#Wrap as Distributed
+generator = torch.nn.parallel.DistributedDataParallel(generator, device_ids=[opt.local_rank] if opt.cuda else None, \
+                            output_device=opt.local_rank if opt.cuda else None)
+discriminator = torch.nn.parallel.DistributedDataParallel(discriminator, device_ids=[opt.local_rank] if opt.cuda else None, \
+                        output_device=opt.local_rank if opt.cuda else None)
 
 # Set feature extractor to inference mode
 feature_extractor.eval()
@@ -86,12 +113,18 @@ optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt
 #Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.Tensor
 Tensor = torch.Tensor
 
-dataloader = DataLoader(
-    ImageDataset("./data/%s" % opt.dataset_name, hr_shape=hr_shape),
-    batch_size=opt.batch_size,
-    shuffle=True,
-    num_workers=opt.n_cpu,
-)
+#Load wrapped in Distributed Sampler
+train_sampler = DistributedSampler(dataset=ImageDataset("./data/%s" % opt.dataset_name, hr_shape=hr_shape))
+
+#TODO Original solution of dataload
+#dataloader = DataLoader(
+#    ImageDataset("./data/%s" % opt.dataset_name, hr_shape=hr_shape),
+#    batch_size=opt.batch_size,
+#    shuffle=True,
+#    num_workers=opt.n_cpu,
+#)
+dataloader = DataLoader(dataset=ImageDataset("./data/%s" % opt.dataset_name, hr_shape=hr_shape), batch_size=opt.batch_size, sampler=train_sampler, \
+                                num_workers=opt.n_cpu)
 
 # ----------
 #  Training

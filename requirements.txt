@@ -1,0 +1,8 @@
+torch
+torchvision
+torchelastic
+lmdb
+wget
+requests
+tqdm
+ninja
