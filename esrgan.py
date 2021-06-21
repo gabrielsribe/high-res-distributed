@@ -15,6 +15,7 @@ import numpy as np
 import math
 import itertools
 import sys
+import time
 
 import torchvision.transforms as transforms
 from torchvision.utils import save_image, make_grid
@@ -33,6 +34,8 @@ import torch
 
 os.makedirs("images/training", exist_ok=True)
 os.makedirs("saved_models", exist_ok=True)
+
+start_time = time.time()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--epoch", type=int, default=0, help="epoch to start training from")
@@ -58,10 +61,6 @@ parser.add_argument("--local_rank", type=int, help="Local rank. Necessary for us
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 opt = parser.parse_args()
 print(opt)
-
-#device = torch.device("cpu")
-#TODO make work with this configuration
-#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 if torch.cuda.is_available():
     device = torch.device('cuda')
@@ -110,8 +109,8 @@ optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1,
 optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
 
 #TODO make work with this configuration
-#Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.Tensor
-Tensor = torch.Tensor
+Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.Tensor
+#Tensor = torch.Tensor
 
 #Load wrapped in Distributed Sampler
 train_sampler = DistributedSampler(dataset=ImageDataset("./data/%s" % opt.dataset_name, hr_shape=hr_shape))
@@ -130,8 +129,14 @@ dataloader = DataLoader(dataset=ImageDataset("./data/%s" % opt.dataset_name, hr_
 #  Training
 # ----------
 
+initialization_time = time.time() - start_time
+print(f"[MO833] Rank,{rank},Initialization Time: {initialization_time:.4f}")
+
 for epoch in range(opt.epoch, opt.n_epochs):
+    epoch_start_time = time.time()
     for i, imgs in enumerate(dataloader):
+
+        iteration_start_time = time.time()
 
         batches_done = epoch * len(dataloader) + i
 
@@ -163,6 +168,12 @@ for epoch in range(opt.epoch, opt.n_epochs):
                 "[Epoch %d/%d] [Batch %d/%d] [G pixel: %f]"
                 % (epoch, opt.n_epochs, i, len(dataloader), loss_pixel.item())
             )
+            
+            iteration_end_time = time.time()
+            iteration_time = iteration_end_time - iteration_start_time
+            elapsed_time = iteration_end_time - start_time
+            print(f"[MO833] Rank,{rank},Epoch,{epoch},Iteration,{i},It. time,{iteration_time:.4f},Elapsed time,{elapsed_time:.4f}")
+
             continue
 
         # Extract validity predictions from discriminator
@@ -221,6 +232,7 @@ for epoch in range(opt.epoch, opt.n_epochs):
             )
         )
 
+        
         if batches_done % opt.sample_interval == 0:
             # Save image grid with upsampled inputs and ESRGAN outputs
             imgs_lr = nn.functional.interpolate(imgs_lr, scale_factor=4)
@@ -231,3 +243,8 @@ for epoch in range(opt.epoch, opt.n_epochs):
             # Save model checkpoints
             torch.save(generator.state_dict(), "saved_models/generator_%d.pth" % epoch)
             torch.save(discriminator.state_dict(), "saved_models/discriminator_%d.pth" %epoch)
+
+    epoch_end_time = time.time()
+    epoch_time = epoch_end_time - epoch_start_time
+    elapsed_time = epoch_end_time - start_time
+    print(f"[MO833] Rank,{rank},Epoch,{epoch},Epoch time,{epoch_time:.4f},Elapsed time,{elapsed_time:.4f}")
