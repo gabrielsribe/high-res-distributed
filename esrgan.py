@@ -32,6 +32,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
+
+#TODO change pathname
+node_id = "TEST_NODE"
+experiment_id = "TEST_EXPERIMENT_ID"
+directory = f"mo833-trabalho/experiments/{experiment_id}/{time.time()}/PIs_logs/"
+file_name = f"{directory}{node_id}-{experiment_id}-{time.time()}.out"
+
+os.makedirs(directory, exist_ok=True)
 os.makedirs("images/training", exist_ok=True)
 os.makedirs("saved_models", exist_ok=True)
 
@@ -130,7 +138,9 @@ dataloader = DataLoader(dataset=ImageDataset("./data/%s" % opt.dataset_name, hr_
 # ----------
 
 initialization_time = time.time() - start_time
-print(f"[MO833] Rank,{rank},Initialization Time: {initialization_time:.4f}")
+with open(file_name, "a") as experiment_file:
+    experiment_file.write(f"[MO833] Rank,{rank},Initialization Time: {initialization_time:.4f}\n")
+#print(f"[MO833] Rank,{rank},Initialization Time: {initialization_time:.4f}")
 
 for epoch in range(opt.epoch, opt.n_epochs):
     epoch_start_time = time.time()
@@ -168,11 +178,16 @@ for epoch in range(opt.epoch, opt.n_epochs):
                 "[Epoch %d/%d] [Batch %d/%d] [G pixel: %f]"
                 % (epoch, opt.n_epochs, i, len(dataloader), loss_pixel.item())
             )
-            
+
             iteration_end_time = time.time()
             iteration_time = iteration_end_time - iteration_start_time
             elapsed_time = iteration_end_time - start_time
-            print(f"[MO833] Rank,{rank},Epoch,{epoch},Iteration,{i},It. time,{iteration_time:.4f},Elapsed time,{elapsed_time:.4f}")
+            #TODO rename experiment output file
+            #<node_id>-<experiment_id>-<timestamp>.out,(em UNIX Time)
+
+            with open(file_name, "a") as experiment_file:
+                experiment_file.write(f"[MO833] Rank,{rank},Epoch,{epoch},Iteration,{i},It. time,{iteration_time:.4f},Elapsed time,{elapsed_time:.4f}\n")
+            #print(f"[MO833] Rank,{rank},Epoch,{epoch},Iteration,{i},It. time,{iteration_time:.4f},Elapsed time,{elapsed_time:.4f}")
 
             continue
 
@@ -247,4 +262,6 @@ for epoch in range(opt.epoch, opt.n_epochs):
     epoch_end_time = time.time()
     epoch_time = epoch_end_time - epoch_start_time
     elapsed_time = epoch_end_time - start_time
-    print(f"[MO833] Rank,{rank},Epoch,{epoch},Epoch time,{epoch_time:.4f},Elapsed time,{elapsed_time:.4f}")
+    with open(file_name, "a") as experiment_file:
+        experiment_file.write(f"[MO833] Rank,{rank},Epoch,{epoch},Epoch time,{epoch_time:.4f},Elapsed time,{elapsed_time:.4f}\n")
+    #print(f"[MO833] Rank,{rank},Epoch,{epoch},Epoch time,{epoch_time:.4f},Elapsed time,{elapsed_time:.4f}")
