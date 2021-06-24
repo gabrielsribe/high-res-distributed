@@ -36,4 +36,4 @@ Avaliar o tempo de e custo rodando nas máquinas ideais
 ##### Cluster inicial 3 máquinas homogeneas: [Serão descobertas no experimento]
 
 #### Massa de dados
-1000 Imagens do dataset CelebA de 128x128
+500 Imagens do dataset CelebA de 128x128
