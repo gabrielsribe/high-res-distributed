@@ -110,7 +110,7 @@ Não foi possivel avaliar a perfomance ou custo do optmizador, mas neste cenári
 * Custo total da "optimização" = 0,006053722 dólar
 
 ## Limitções encontradas e sugestões de run
-Quando chegarem na etapa de rodar os comandos pela api do clap via SSH, rodem um comenando, esperem o resultando ser devolvido e após isso ao partir para iniciar o próximo comando, não sei explicar exatamente o porque, mas rodar o comando para ver se os nós estão ativos e reacheble é uma boa pedida. Por algum motivo aparentemente a seção do SSH é reiniciada ou passa a funcionar conforme esperado após isso. Evitem também subir duas máquinas num mesmo comando, funciona melhor fazendo passo a passo, máquina por máquina.
+Quando chegarem na etapa de rodar os comandos pela api do clap via SSH, rodem um comando, esperem o resultando ser devolvido e após isso ao partir para iniciar o próximo comando, não sei explicar exatamente o porque, mas rodar o comando para ver se os nós estão ativos e reacheble é uma boa pedida. Por algum motivo a seção do SSH é reiniciada ou passa a funcionar conforme esperado após isso. Evitem também subir duas máquinas num mesmo comando, funciona melhor fazendo passo a passo, máquina por máquina.
 
 # Aos senhores docentes da Disciplina MO833A
 Primeiramente, muito obrigado por toda a paciência e ajuda em todo esse semestre ao professor Edson Borin e também ao monitor Otávio pela disponibilidade impar.
