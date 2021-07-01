@@ -1,0 +1,24 @@
+setups:
+  experiment-install:
+    roles:
+    - name: experiment
+      extra:
+        pubkey: ~/.ssh/id_rsa.pub
+        privkey: ~/.ssh/id_rsa
+
+  launch-experiment:
+    actions:
+    - role: experiment
+      action: run
+
+clusters:
+  experiment-cluster:
+    nodes:
+      npb-type-b:
+        type: type-b
+        count: 2
+        setups:
+        - experiment-install
+
+    after_all:
+    - launch-experiment

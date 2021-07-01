@@ -1,0 +1,8 @@
+actions:
+
+  result:
+    playbook: roles/experiment/experiment_result.yml
+    description: Fetch results from execution to an local directory
+    vars:
+    - name: output
+      description: Path where resuts will be placed

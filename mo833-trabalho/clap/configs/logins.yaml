@@ -1,0 +1,7 @@
+login-ubuntu:
+    user: ubuntu
+    keypair_name: gsribeiro-2
+    keypair_public_file: gsribeiro-2.pub
+    keypair_private_file: gsribeiro-2.pem
+    sudo: true
+    sudo_user: root

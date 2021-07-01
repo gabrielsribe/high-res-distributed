@@ -1,0 +1,14 @@
+type-c4x:
+    provider: aws-config-us-east-1
+    login: login-ubuntu
+    flavor: c4.xlarge
+    image_id: ami-0a9a70f00b4ab9550
+    security_group: gsribeiro-2-sg
+
+type-c5x:
+    provider: aws-config-us-east-1
+    login: login-ubuntu
+    flavor: c5.xlarge
+    image_id: ami-0a9a70f00b4ab9550
+    boot_disk_size: 16
+    security_group: gsribeiro-2-sg
