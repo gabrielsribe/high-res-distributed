@@ -86,7 +86,11 @@ Sendo assim temos duas massas de dados onde é possivel utilizar no treinamento 
 
 ## Resultados e Discussão
 
-As informações detalhadas podem ser encontradas no notebook experiment_execute.ipynb
+Os nomes dos arquivos de resultados (*.out) tem em sua composição (TEST_NODE-TEST_EXPERIMENT_ID) pois a abordagem inicial seria utilizar esses valores para fazer o o fetch de resultados doo cluster.
+
+Como nos experimentos não foi utilizado cluster, esses campos não foram preenchidos.
+
+As informações detalhadas da run e como rodar o experimento podem ser encontradas no notebook experiment_execute.ipynb
 
 A conta foi feita da seguinte maneira:
 * node_count = numero de nós de processamento (Cores)
